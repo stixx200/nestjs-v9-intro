@@ -1,26 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { CatMongoose, CatDocument } from './schemas/cat.schema';
 
 @Injectable()
 export class CatsService {
-  create(createCatDto: CreateCatDto) {
-    return 'This action adds a new cat';
+  constructor(@InjectModel(CatMongoose.name) private catModel: Model<CatDocument>) {}
+
+  async create(createCatDto: CreateCatDto) {
+    const cat = new this.catModel(createCatDto);
+    await cat.save();
   }
 
-  findAll() {
-    return `This action returns all cats`;
+  async findAll(minAge: number) {
+    const filter: any = {};
+    if (!Number.isNaN(minAge)) {
+      filter.age = { $gte: minAge };
+    }
+    return await this.catModel.find(filter);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cat`;
+  async findOne(id: string) {
+    const cat = await this.catModel.findOne({ _id: id });
+    return cat;
   }
 
-  update(id: number, updateCatDto: UpdateCatDto) {
-    return `This action updates a #${id} cat`;
+  async update(id: string, updateCatDto: UpdateCatDto) {
+    const cat = await this.findOne(id);
+    // cat.name = updateCatDto.name || cat.name;
+    // cat.age = updateCatDto.age || cat.age;
+    Object.assign(cat, updateCatDto);
+    await cat.save();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cat`;
+  async remove(id: string) {
+    await this.catModel.deleteOne({ _id: id });
   }
 }

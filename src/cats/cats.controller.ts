@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ContentTypeGuardGuard } from 'src/content-type-guard/content-type-guard.guard';
 import { ContentType } from 'src/content-type-guard/content-type.decorator';
 import { CatsService } from './cats.service';
@@ -13,29 +13,30 @@ export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
   @Post()
-  @ContentType(catContentType)
+  @ContentType(catContentType, "application/json")
   create(@Body() createCatDto: CreateCatDto) {
+    console.log(createCatDto);
     return this.catsService.create(createCatDto);
   }
 
   @Get()
-  findAll() {
-    return this.catsService.findAll();
+  findAll(@Query("minAge") minAge: string) {
+    return this.catsService.findAll(parseInt(minAge));
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.catsService.findOne(parseInt(id));
+    return this.catsService.findOne(id);
   }
 
   @Patch(':id')
-  @ContentType(catContentType)
+  @ContentType(catContentType, "application/json")
   update(@Param('id') id: string, @Body() updateCatDto: UpdateCatDto) {
-    return this.catsService.update(+id, updateCatDto);
+    return this.catsService.update(id, updateCatDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.catsService.remove(+id);
+    return this.catsService.remove(id);
   }
 }
